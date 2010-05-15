@@ -23,6 +23,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <malloc.h>
+#define __USE_GNU 1
 #include <fcntl.h>
 #include <errno.h>
 #include <string.h>
