@@ -114,6 +114,9 @@ static int	D_flag = 0;
 #define		F_CLOSE	3
 #define		F_OPEN	4
 #define         PAUSE   5
+#define         WAITRESPONSE 6
+#define         F_WAIT  128
+
 
 #define		PASS 	1
 #define		FAIL	0
@@ -384,6 +387,13 @@ static int64_t tests[][6] =
 		{14,	WRLOCK,	30,		15,		FAIL,		CLIENT	}, 
 		/* The start is before, end is the same */
 		{14,	RDLOCK,	25,		20,		FAIL,		CLIENT	}, 
+		{14,	RDLOCK|F_WAIT,	25,	20,	        PASS,		CLIENT	},
+		{14,	UNLOCK,	30,		10,		PASS,		SERVER	},
+		{14,	WAITRESPONSE,	25,	20,	        PASS,		CLIENT	},
+		{14,	UNLOCK,	25,	        20,	        PASS,		CLIENT	},
+		{14,	WRLOCK,	30,		10,		PASS,		SERVER	},
+		{14,	WRLOCK,	30,		10,		PASS,		SERVER	}, 
+
 		{14,	WRLOCK,	25,		20,		FAIL,		CLIENT	}, 
 		/* Both start and end overlap */
 		{14,	RDLOCK,	22,		26,		FAIL,		CLIENT	}, 
@@ -639,7 +649,7 @@ int do_open(int flag)
     return PASS;
 }
 
-int do_lock(int type, int start, int length)
+int do_lock(int type, int start, int length, int wait)
 {
     int ret;
     int filedes = f_fd;
@@ -660,7 +670,10 @@ int do_lock(int type, int start, int length)
 
     errno = 0;
 
-    ret = fcntl(filedes, F_SETLK, &fl);
+    if (wait)
+	ret = fcntl(filedes, F_SETLKW, &fl);
+    else 
+        ret = fcntl(filedes, F_SETLK, &fl);
     saved_errno = errno;	    
 
     if(debug > 1 && ret)
@@ -809,8 +822,8 @@ main(int argc, char *argv[])
     extern char	*optarg;
     extern int	optind;
     extern int	errno;
+    int fail_count = 0;
     int pause_yes = 0; 
-    int fail_count = 0;; 
     
     atexit(cleanup);
     
@@ -1007,6 +1020,8 @@ main(int argc, char *argv[])
     int test_count = 0;
     int fail_flag = 0;
     int already_paused = 0;
+    int command = 0;
+    int wait = 0;
     while(!end) {
 	if (server) {
 	    if(testnumber > 0) {
@@ -1027,12 +1042,15 @@ main(int argc, char *argv[])
 		ctl.test = tests[index][TEST_NUM];
 
 		if(tests[index][TEST_NUM] != 0) {
-		    switch(tests[index][COMMAND]) {
+			command = tests[index][COMMAND];
+			wait = command & F_WAIT;
+			command &= ~F_WAIT;
+		    switch(command) {
 			case WRLOCK:
-			    result = do_lock(F_WRLCK, tests[index][OFFSET], tests[index][LENGTH]);
+				result = do_lock(F_WRLCK, tests[index][OFFSET], tests[index][LENGTH], wait);
 			    break;
 			case RDLOCK:
-			    result = do_lock(F_RDLCK, tests[index][OFFSET], tests[index][LENGTH]);
+				result = do_lock(F_RDLCK, tests[index][OFFSET], tests[index][LENGTH], wait);
 			    break;
 			case UNLOCK:
 			    result = do_unlock(tests[index][OFFSET], tests[index][LENGTH]);
@@ -1134,15 +1152,22 @@ main(int argc, char *argv[])
 	    }
 		
 
-	    ctl.command = tests[index][COMMAND];
+	    command = ctl.command = tests[index][COMMAND];
 	    ctl.offset = tests[index][OFFSET];
 	    ctl.length = tests[index][LENGTH];
-	    switch(tests[index][COMMAND]) {
+	    wait = command & F_WAIT;
+	    command &= ~F_WAIT;
+	    if (wait) {
+		    ctl.result = PASS;
+		    send_ctl();
+	    }
+	    switch(command) {
+
 		case WRLOCK:
-		    result = do_lock(F_WRLCK, tests[index][OFFSET], tests[index][LENGTH]);
+			result = do_lock(F_WRLCK, tests[index][OFFSET], tests[index][LENGTH], wait);
 		    break;
 		case RDLOCK:
-		    result = do_lock(F_RDLCK, tests[index][OFFSET], tests[index][LENGTH]);
+			result = do_lock(F_RDLCK, tests[index][OFFSET], tests[index][LENGTH], wait);
 		    break;
 		case UNLOCK:
 		    result = do_unlock(tests[index][OFFSET], tests[index][LENGTH]);
@@ -1160,6 +1185,8 @@ main(int argc, char *argv[])
 		    }
 		    result = PASS;
 		    break;
+	        case WAITRESPONSE: //do nothing, result already stored properly
+		    break;
 	    }
 	    if( result != tests[index][RESULT] ) {
 		if(debug)
@@ -1174,11 +1201,12 @@ main(int argc, char *argv[])
 	    if(debug > 2)
 		fprintf(stderr,"client: sending result to server (%d)\n", ctl.index);
 	    /* Send result to the server */
-	    send_ctl();
+	    if (!wait)
+		    send_ctl();
 	    if(tests[index][TEST_NUM] != 0) {
-		if(last_test != tests[index][TEST_NUM])
-		    test_count++;
-		last_test = tests[index][TEST_NUM];
+		    if(last_test != tests[index][TEST_NUM])
+			    test_count++;
+		    last_test = tests[index][TEST_NUM];
 	    }
 	}
     }
