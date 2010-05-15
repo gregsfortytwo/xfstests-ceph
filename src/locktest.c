@@ -113,6 +113,7 @@ static int	D_flag = 0;
 #define		UNLOCK	2
 #define		F_CLOSE	3
 #define		F_OPEN	4
+#define         PAUSE   5
 
 #define		PASS 	1
 #define		FAIL	0
@@ -378,6 +379,7 @@ static int64_t tests[][6] =
 		{14,	WRLOCK,	30,		10,		PASS,		SERVER	}, 
 		{14,	RDLOCK,	50,		10,		PASS,		SERVER	}, 
 		/* The start is the same, end overlaps */
+		{14,    PAUSE,  0,               0,             PASS,           CLIENT  },
 		{14,	RDLOCK,	30,		15,		FAIL,		CLIENT	},
 		{14,	WRLOCK,	30,		15,		FAIL,		CLIENT	}, 
 		/* The start is before, end is the same */
@@ -807,6 +809,7 @@ main(int argc, char *argv[])
     extern char	*optarg;
     extern int	optind;
     extern int	errno;
+    int pause_yes = 0; 
     int fail_count = 0;; 
     
     atexit(cleanup);
@@ -820,7 +823,7 @@ main(int argc, char *argv[])
 	    prog = p+1;
     }
 
-    while ((c = getopt(argc, argv, "dn:h:p:?")) != EOF) {
+    while ((c = getopt(argc, argv, "dn:h:p:s?")) != EOF) {
 	switch (c) {
 
 	case 'd':	/* debug flag */
@@ -846,6 +849,9 @@ main(int argc, char *argv[])
 	    }
 	    break;
 
+	case 's':
+	    pause_yes = 1;
+	    break;
 	case '?':
 	default:
 	    errflag++;
@@ -1000,6 +1006,7 @@ main(int argc, char *argv[])
     int last_test = 0;
     int test_count = 0;
     int fail_flag = 0;
+    int already_paused = 0;
     while(!end) {
 	if (server) {
 	    if(testnumber > 0) {
@@ -1145,6 +1152,13 @@ main(int argc, char *argv[])
 		    break;
 		case F_OPEN:
 		    result = do_open(tests[index][FLAGS]);
+		    break;
+	        case PAUSE:
+		    if (pause_yes) {
+			fprintf(stderr, "waiting for input to proceed");
+			already_paused = (int)getchar_unlocked();
+		    }
+		    result = PASS;
 		    break;
 	    }
 	    if( result != tests[index][RESULT] ) {
