@@ -382,12 +382,12 @@ static int64_t tests[][6] =
 		{14,	WRLOCK,	30,		10,		PASS,		SERVER	}, 
 		{14,	RDLOCK,	50,		10,		PASS,		SERVER	}, 
 		/* The start is the same, end overlaps */
-		{14,    PAUSE,  0,               0,             PASS,           CLIENT  },
 		{14,	RDLOCK,	30,		15,		FAIL,		CLIENT	},
 		{14,	WRLOCK,	30,		15,		FAIL,		CLIENT	}, 
 		/* The start is before, end is the same */
 		{14,	RDLOCK,	25,		20,		FAIL,		CLIENT	}, 
 		{14,	RDLOCK|F_WAIT,	25,	20,	        PASS,		CLIENT	},
+		{14,    PAUSE,  0,               0,             PASS,           SERVER  },
 		{14,	UNLOCK,	30,		10,		PASS,		SERVER	},
 		{14,	WAITRESPONSE,	25,	20,	        PASS,		CLIENT	},
 		{14,	UNLOCK,	25,	        20,	        PASS,		CLIENT	},
@@ -1060,6 +1060,13 @@ main(int argc, char *argv[])
 			    break;
 			case F_OPEN:
 			    result = do_open(tests[index][FLAGS]);
+			    break;
+		        case PAUSE:
+			    if (pause_yes) {
+				fprintf(stderr, "waiting for input to proceed");
+				already_paused = (int)getchar_unlocked();
+			    }
+			    result = PASS;
 			    break;
 		    }
 		    if( result != tests[index][RESULT]) {
