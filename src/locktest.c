@@ -524,6 +524,7 @@ static int64_t tests[][6] =
 		{28,	F_OPEN,	0,		0,		PASS,		SERVER,	},
 		{28,	WRLOCK,	0,		0,		FAIL,		SERVER,	},
 		{28,	UNLOCK,	1,		5,		PASS,		SERVER,	},
+		{28,	UNLOCK,	1,		5,		PASS,		CLIENT,	},
 #ifdef macosx
 	/* Close the opened file and open the file with SHLOCK, other client will try to open with SHLOCK too */
 		{29,	F_CLOSE,0,		0,		PASS,		SERVER,	},
