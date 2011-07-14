@@ -545,6 +545,25 @@ static int64_t tests[][6] =
 		{31,	F_OPEN,	0,		0,		PASS,		SERVER,	},
 		{31,	F_OPEN,	0,		0,		PASS,		CLIENT,	},
 #endif /* macosx */
+	/* Do some wait lock tests */
+		{32,    WRLOCK, 0,             10,              PASS,           SERVER,},
+		{32,    WRLOCK|F_WAIT, 0,      10,              PASS,           CLIENT,},
+		{32,    UNLOCK, 0,             10,              PASS,           SERVER,},
+		{32,    WAITRESPONSE, 0,        0,              PASS,           CLIENT,},
+		{32,    WRLOCK, 0,             10,              FAIL,           SERVER,},
+		{32,    WRLOCK, 0,             10,              PASS,           CLIENT,},
+		{32,    WRLOCK, 15,            10,              PASS,           SERVER,},
+		{32,    UNLOCK, 0,             10,              PASS,           CLIENT,},
+		{32,    WRLOCK, 0,             25,              FAIL,           CLIENT,},
+        /* Check that it works even if part is unlocked */
+		{32,    WRLOCK|F_WAIT, 0,      25,              PASS,           CLIENT,},
+		{32,    UNLOCK, 15,            10,              PASS,           SERVER,},
+		{32,    WAITRESPONSE, 0,        0,              PASS,           CLIENT,},
+		{32,    UNLOCK, 0,             25,              PASS,           CLIENT,},
+        /* Check that it locks right away if there's not a conflicting lock */
+		{32,    WRLOCK|F_WAIT, 0,      25,              PASS,           CLIENT,},
+		{32,    WAITRESPONSE, 0,        0,              PASS,           CLIENT,},
+
 	/* indicate end of array */
 		{0,0,0,0,0,SERVER},
 		{0,0,0,0,0,CLIENT}
