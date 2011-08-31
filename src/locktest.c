@@ -188,7 +188,7 @@ char *descriptions[] = {
     /* 30 */"Close the opened file and open the file with SHLOCK, other client will try to open with EXLOCK",
     /* 31 */"Close the opened file and open the file with EXLOCK, other client will try to open with EXLOCK too",
     #endif
-    /* 32 */"Test wait locking"
+    /* 32 */"Test wait locking",
 };
 
 static int64_t tests[][6] =
@@ -1073,8 +1073,8 @@ main(int argc, char *argv[])
 			/* We have a failure */
 			if(debug)
 			    fprintf(stderr, "Server failure in test %d, while %sing using offset %lld, length %lld - err = %d:%s\n", 
-					ctl.test, tests[index][COMMAND]==WRLOCK?"write lock":
-						tests[index][COMMAND]==RDLOCK?"read lock":
+					ctl.test, tests[index][COMMAND]&~F_WAIT==WRLOCK?"write lock":
+						tests[index][COMMAND]&~F_WAIT==RDLOCK?"read lock":
 						tests[index][COMMAND]==UNLOCK?"unlock":
 						tests[index][COMMAND]==F_OPEN?"open":"clos", 
 						(long long)tests[index][OFFSET],
@@ -1093,8 +1093,8 @@ main(int argc, char *argv[])
 		} 
 		if(debug > 1)
 		    fprintf(stderr, "Sending command to client (%d) - %s - %lld:%lld\n", 
-					index, tests[index][COMMAND]==WRLOCK?"write lock":
-					tests[index][COMMAND]==RDLOCK?"read lock":
+					index, tests[index][COMMAND]&~F_WAIT==WRLOCK?"write lock":
+					tests[index][COMMAND]&~F_WAIT==RDLOCK?"read lock":
 					tests[index][COMMAND]==UNLOCK?"unlock": 
 					tests[index][COMMAND]==F_OPEN?"open":"clos", 
 					(long long)tests[index][OFFSET],
@@ -1111,8 +1111,8 @@ main(int argc, char *argv[])
 			fail_flag++;
 			if(debug)
 			    fprintf(stderr, "Client failure in test %d, while %sing using offset %lld, length %lld - err = %d:%s\n",
-					ctl.test, ctl.command==WRLOCK?"write lock":
-					ctl.command==RDLOCK?"read lock":
+					ctl.test, ctl.command&~F_WAIT==WRLOCK?"write lock":
+					ctl.command&~F_WAIT==RDLOCK?"read lock":
 					ctl.command==UNLOCK?"unlock":
 					ctl.command==F_OPEN?"open":"clos",
 					(long long)ctl.offset, (long long)ctl.length,
