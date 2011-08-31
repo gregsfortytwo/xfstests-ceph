@@ -545,6 +545,7 @@ static int64_t tests[][6] =
 		{31,	F_CLOSE,0,		0,		FAIL,		CLIENT,	},
 		{31,	F_OPEN,	0,		0,		PASS,		SERVER,	},
 		{31,	F_OPEN,	0,		0,		PASS,		CLIENT,	},
+
 #endif /* macosx */
 	/* Do some wait lock tests */
 		{32,    WRLOCK, 0,             10,              PASS,           SERVER,},
@@ -564,6 +565,21 @@ static int64_t tests[][6] =
         /* Check that it locks right away if there's not a conflicting lock */
 		{32,    WRLOCK|F_WAIT, 0,      25,              PASS,           CLIENT,},
 		{32,    WAITRESPONSE, 0,        0,              PASS,           CLIENT,},
+		/* Check that 0,0 unlocks unlock everything */
+		{33,	WRLOCK,	1,		5,		PASS,		SERVER,	},
+		{33,	WRLOCK,	10,		5,		PASS,		SERVER,	},
+		{33,	WRLOCK,	20,		5,		PASS,		SERVER,	},
+		{33,	WRLOCK,	30,		5,		PASS,		SERVER,	},
+		{33,	WRLOCK,	1,		5,		FAIL,		CLIENT,	},
+		{33,	WRLOCK,	10,		5,		FAIL,		CLIENT,	},
+		{33,	WRLOCK,	20,		5,		FAIL,		CLIENT,	},
+		{33,	WRLOCK,	30,		5,		FAIL,		CLIENT,	},
+		{33,	UNLOCK,	0,		0,		PASS,		SERVER,	},
+		{33,	WRLOCK,	1,		5,		PASS,		CLIENT,	},
+		{33,	WRLOCK,	10,		5,		PASS,		CLIENT,	},
+		{33,	WRLOCK,	20,		5,		PASS,		CLIENT,	},
+		{33,	WRLOCK,	30,		5,		PASS,		CLIENT,	},
+		{33,	UNLOCK,	0,		0,		PASS,		CLIENT,	},
 
 	/* indicate end of array */
 		{0,0,0,0,0,SERVER},
