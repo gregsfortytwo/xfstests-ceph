@@ -186,8 +186,9 @@ char *descriptions[] = {
     #if defined(macosx)
     /* 29 */"Close the opened file and open the file with SHLOCK, other client will try to open with SHLOCK too",
     /* 30 */"Close the opened file and open the file with SHLOCK, other client will try to open with EXLOCK",
-    /* 31 */"Close the opened file and open the file with EXLOCK, other client will try to open with EXLOCK too"
+    /* 31 */"Close the opened file and open the file with EXLOCK, other client will try to open with EXLOCK too",
     #endif
+    /* 32 */"Test wait locking"
 };
 
 static int64_t tests[][6] =
