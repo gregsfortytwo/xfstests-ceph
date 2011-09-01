@@ -567,6 +567,7 @@ static int64_t tests[][6] =
         /* Check that it locks right away if there's not a conflicting lock */
 		{32,    WRLOCK|F_WAIT, 0,      25,              PASS,           CLIENT,},
 		{32,    WAITRESPONSE, 0,        0,              PASS,           CLIENT,},
+		{32,    UNLOCK, 0,      25,              PASS,           CLIENT,},
 		/* Check that 0,0 unlocks unlock everything */
 		{33,	WRLOCK,	1,		5,		PASS,		SERVER,	},
 		{33,	WRLOCK,	10,		5,		PASS,		SERVER,	},
