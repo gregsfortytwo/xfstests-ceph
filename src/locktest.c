@@ -699,11 +699,9 @@ int do_lock(int type, int start, int length, int wait)
 
     errno = 0;
 
-    if (wait) {
-	    do {
-		    ret = fcntl(filedes, F_SETLKW, &fl);
-	    } while (ret && errno == EINTR);
-    } else 
+    if (wait)
+	ret = fcntl(filedes, F_SETLKW, &fl);
+    else 
         ret = fcntl(filedes, F_SETLK, &fl);
     saved_errno = errno;	    
 
